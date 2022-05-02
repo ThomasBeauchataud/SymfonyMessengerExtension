@@ -1,0 +1,46 @@
+{
+    "name": "tbcd/symfony-messenger-extension",
+    "type": "library",
+    "description": "A symfony/messenger extension providing additional middleware",
+    "authors": [
+        {
+            "name": "Thomas Beauchataud"
+        }
+    ],
+    "license": "MIT",
+    "keywords": [
+        "messenger",
+        "limit",
+        "limiter",
+        "message",
+        "middleware",
+        "stamp",
+        "symfony",
+        "extension"
+    ],
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "version": "1.0.0",
+    "require": {
+        "php": ">=8.0.2",
+        "psr/cache": "^3.0",
+        "psr/log": "^3.0",
+        "symfony/dependency-injection": "^6.0",
+        "symfony/messenger": "^6.0",
+        "symfony/event-dispatcher": "^6.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "TBCD\\MessengerExtension\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TBCD\\Tests\\MessengerExtension\\": "tests/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "symfony/cache": "^6.0"
+    }
+}
