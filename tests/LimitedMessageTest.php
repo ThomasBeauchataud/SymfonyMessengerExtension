@@ -8,7 +8,7 @@
 namespace TBCD\Tests\MessengerExtension;
 
 use DateInterval;
-use TBCD\MessengerExtension\Middleware\LimitedMessage;
+use TBCD\MessengerExtension\Message\LimitedMessage;
 
 class LimitedMessageTest implements LimitedMessage
 {

@@ -2,15 +2,15 @@
 
 namespace TBCD\Tests\MessengerExtension;
 
+use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Middleware\StackMiddleware;
-use Symfony\Component\Messenger\Test\Middleware\MiddlewareTestCase;
 use TBCD\MessengerExtension\Middleware\LimiterMiddleware;
 use TBCD\MessengerExtension\Stamp\LimitedStamp;
 
-class LimiterMiddlewareTest extends MiddlewareTestCase
+class LimiterMiddlewareTest extends TestCase
 {
 
     /**

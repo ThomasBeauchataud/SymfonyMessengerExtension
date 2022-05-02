@@ -12,6 +12,8 @@ use DateTimeInterface;
 use Symfony\Component\Messenger\Stamp\StampInterface;
 
 /**
+ * The LimiterMiddleware success stamp
+ *
  * @author Thomas Beauchataud
  * @since 02/05/2022
  */

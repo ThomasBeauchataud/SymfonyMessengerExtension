@@ -15,6 +15,7 @@ use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
 use Symfony\Component\Messenger\Middleware\StackInterface;
+use TBCD\MessengerExtension\Message\LimitedMessage;
 use TBCD\MessengerExtension\Stamp\LimitedStamp;
 
 /**
@@ -66,11 +67,11 @@ class LimiterMiddleware implements MiddlewareInterface
             $item->set($now);
             $item->expiresAfter($message->getInterval());
             $this->cache->save($item);
-            $stamp = new LimitedStamp($now, $now, $message->getInterval());
         } else {
             $this->logger->info(sprintf("Stopping the propagation of the message %s to the handler due to message limitation", $message::class));
-            $stamp = new LimitedStamp($item->get(), $now, $message->getInterval());
         }
+
+        $stamp = new LimitedStamp($item->get(), $now, $message->getInterval());
 
         return $envelope->with($stamp);
     }

@@ -5,7 +5,7 @@
  * Since 22/03/2022
  */
 
-namespace TBCD\MessengerExtension\Middleware;
+namespace TBCD\MessengerExtension\Message;
 
 use DateInterval;
 
