@@ -28,7 +28,7 @@ class DependenciesMiddlewareTest extends TestCase
         $dependenciesStamp = $firstReturn->last(DependenciesStamp::class);
         $this->assertInstanceOf(DependenciesStamp::class, $dependenciesStamp);
 
-        $message = new LimitedMessageTest();
+        $message = new DummyMessage();
         $envelope = new Envelope($message);
 
         $secondReturn = $middleware->handle($envelope, $stack);

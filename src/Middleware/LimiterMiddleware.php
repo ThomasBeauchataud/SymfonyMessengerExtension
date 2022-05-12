@@ -15,8 +15,8 @@ use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\Messenger\Envelope;
 use Symfony\Component\Messenger\Middleware\MiddlewareInterface;
 use Symfony\Component\Messenger\Middleware\StackInterface;
-use TBCD\MessengerExtension\Message\LimitedMessage;
 use TBCD\MessengerExtension\Stamp\LimitedStamp;
+use TBCD\MessengerExtension\Stamp\LimiterStamp;
 
 /**
  * @author Thomas Beauchataud
@@ -46,14 +46,15 @@ class LimiterMiddleware implements MiddlewareInterface
      */
     public function handle(Envelope $envelope, StackInterface $stack): Envelope
     {
-        $message = $envelope->getMessage();
+        $messageClass = $envelope->getMessage()::class;
 
-        if (!$message instanceof LimitedMessage || !$message->getInterval()) {
+        /** @var LimiterStamp $limiterStamp */
+        if (!($limiterStamp = $envelope->last(LimiterStamp::class))) {
             return $stack->next()->handle($envelope, $stack);
         }
 
         try {
-            $messageCode = str_replace('\\', '_', strtolower($message::class));
+            $messageCode = str_replace('\\', '_', strtolower($messageClass));
             $item = $this->cache->getItem("tbcd.limiter_middleware.$messageCode");
         } catch (InvalidArgumentException $e) {
             $this->logger->error($e->getMessage());
@@ -65,13 +66,13 @@ class LimiterMiddleware implements MiddlewareInterface
         if (!$item->isHit()) {
             $envelope = $stack->next()->handle($envelope, $stack);
             $item->set($now);
-            $item->expiresAfter($message->getInterval());
+            $item->expiresAfter($limiterStamp->getDateInterval());
             $this->cache->save($item);
         } else {
-            $this->logger->info(sprintf("Stopping the propagation of the message %s to the handler due to message limitation", $message::class));
+            $this->logger->info("Stopping the propagation of the message $messageClass to the handler due to message limitation");
         }
 
-        $stamp = new LimitedStamp($item->get(), $now, $message->getInterval());
+        $stamp = new LimitedStamp($item->get(), $now, $limiterStamp->getDateInterval());
 
         return $envelope->with($stamp);
     }

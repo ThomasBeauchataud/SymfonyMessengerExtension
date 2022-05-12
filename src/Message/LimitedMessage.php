@@ -10,6 +10,8 @@ namespace TBCD\MessengerExtension\Message;
 use DateInterval;
 
 /**
+ * @deprecated Use LimiterStamp instead
+ *
  * @author Thomas Beauchataud
  * @since 02/05/2022
  */

@@ -7,6 +7,7 @@
 
 namespace TBCD\MessengerExtension\Middleware;
 
+use DateInterval;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\Messenger\Envelope;
@@ -16,6 +17,7 @@ use Symfony\Component\Messenger\Middleware\StackInterface;
 use TBCD\MessengerExtension\Message\DependentMessage;
 use TBCD\MessengerExtension\Stamp\DependenciesStamp;
 use TBCD\MessengerExtension\Stamp\DependencyStamp;
+use TBCD\MessengerExtension\Stamp\LimiterStamp;
 
 /**
  * @author Thomas Beauchataud
@@ -51,7 +53,7 @@ class DependenciesMiddleware implements MiddlewareInterface
             if (($message = $envelope->getMessage()) instanceof DependentMessage) {
                 foreach ($message->getMessageDependencies() as $messageDependency) {
                     $this->logger->info(sprintf('Dispatching the message %s as a dependency of the message %s', $messageDependency::class, $message::class));
-                    $this->bus->dispatch($messageDependency, [new DependencyStamp()]);
+                    $this->bus->dispatch($messageDependency, [new DependencyStamp(), new LimiterStamp(new DateInterval("PT30M"))]);
                 }
 
                 return $stack->next()->handle($envelope->with(new DependenciesStamp()), $stack);
