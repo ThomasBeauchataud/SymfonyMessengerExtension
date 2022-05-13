@@ -47,33 +47,49 @@ class LimiterMiddleware implements MiddlewareInterface
     public function handle(Envelope $envelope, StackInterface $stack): Envelope
     {
         $messageClass = $envelope->getMessage()::class;
-
-        /** @var LimiterStamp $limiterStamp */
-        if (!($limiterStamp = $envelope->last(LimiterStamp::class))) {
-            return $stack->next()->handle($envelope, $stack);
-        }
+        $messageCode = str_replace('\\', '_', strtolower($messageClass));
+        $cacheKey = "tbcd.limiter_middleware.$messageCode";
 
         try {
-            $messageCode = str_replace('\\', '_', strtolower($messageClass));
-            $item = $this->cache->getItem("tbcd.limiter_middleware.$messageCode");
+
+            $item = $this->cache->getItem($cacheKey);
+
+            if (!$envelope->last(LimiterStamp::class)) {
+                $envelope = $stack->next()->handle($envelope, $stack);
+                $item->set(new DateTime());
+                $this->cache->save($item);
+                return $envelope;
+            }
+
+            /** @var LimiterStamp $limiterStamp */
+            $limiterStamp = $envelope->last(LimiterStamp::class);
+
+            if (!$item->isHit()) {
+                $envelope = $stack->next()->handle($envelope, $stack);
+                $now = new DateTime();
+                $item->set($now);
+                $this->cache->save($item);
+                $limiterStamp = new LimitedStamp($now, $now, $limiterStamp->getDateInterval());
+                return $envelope->with($limiterStamp);
+            }
+
+            /** @var DateTime $lastExecution */
+            $lastExecution = $item->get();
+            if ($lastExecution->add($limiterStamp->getDateInterval()) > ($now = new DateTime())) {
+                $this->logger->info("Stopping the propagation of the message $messageClass to the handler due to message limitation");
+                $limiterStamp = new LimitedStamp($lastExecution, $now, $limiterStamp->getDateInterval());
+            } else {
+                $envelope = $stack->next()->handle($envelope, $stack);
+                $now = new DateTime();
+                $item->set($now);
+                $this->cache->save($item);
+                $limiterStamp = new LimitedStamp($now, $now, $limiterStamp->getDateInterval());
+            }
+            return $envelope->with($limiterStamp);
+
         } catch (InvalidArgumentException $e) {
             $this->logger->error($e->getMessage());
             return $stack->next()->handle($envelope, $stack);
         }
-
-        $now = new DateTime();
-
-        if (!$item->isHit()) {
-            $envelope = $stack->next()->handle($envelope, $stack);
-            $item->set($now);
-            $item->expiresAfter($limiterStamp->getDateInterval());
-            $this->cache->save($item);
-        } else {
-            $this->logger->info("Stopping the propagation of the message $messageClass to the handler due to message limitation");
-        }
-
-        $stamp = new LimitedStamp($item->get(), $now, $limiterStamp->getDateInterval());
-
-        return $envelope->with($stamp);
     }
 }
